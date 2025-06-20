@@ -2,7 +2,6 @@
 
 This project provides a simple REST API to track incoming Bitcoin deposits,
 place buy/sell orders and retrieve the wallet balance history at hourly
-intervals.
 
 ## Building and Running
 
@@ -87,3 +86,4 @@ Return current buy and sell orders.
 ### GET /trades
 
 Return all executed trades.
+

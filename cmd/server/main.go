@@ -15,12 +15,15 @@ var (
 	ob = exchange.NewBook()
 )
 
+
 func main() {
 	http.HandleFunc("/records", addRecordHandler)
 	http.HandleFunc("/history", historyHandler)
+
 	http.HandleFunc("/orders", orderHandler)
 	http.HandleFunc("/orderbook", bookHandler)
 	http.HandleFunc("/trades", tradesHandler)
+
 
 	log.Println("Server listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
