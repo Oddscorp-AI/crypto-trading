@@ -1,7 +1,7 @@
 # Crypto Trading Wallet API
 
-This project provides a simple REST API to track incoming Bitcoin deposits and
-retrieve the wallet balance history at hourly intervals.
+This project provides a simple REST API to track incoming Bitcoin deposits,
+place buy/sell orders and retrieve the wallet balance history at hourly
 
 ## Building and Running
 
@@ -64,3 +64,26 @@ Run unit tests with:
 ```bash
 go test ./...
 ```
+
+### POST /orders
+
+Place a buy or sell limit order.
+
+Request body:
+
+```json
+{
+  "type": "buy",
+  "price": 100,
+  "quantity": 1
+}
+```
+
+### GET /orderbook
+
+Return current buy and sell orders.
+
+### GET /trades
+
+Return all executed trades.
+

@@ -6,14 +6,24 @@ import (
 	"net/http"
 	"time"
 
+	"crypto-trading/internal/exchange"
 	"crypto-trading/internal/wallet"
 )
 
-var w = wallet.New(1000)
+var (
+	w  = wallet.New(1000)
+	ob = exchange.NewBook()
+)
+
 
 func main() {
 	http.HandleFunc("/records", addRecordHandler)
 	http.HandleFunc("/history", historyHandler)
+
+	http.HandleFunc("/orders", orderHandler)
+	http.HandleFunc("/orderbook", bookHandler)
+	http.HandleFunc("/trades", tradesHandler)
+
 
 	log.Println("Server listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -77,4 +87,51 @@ func historyHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 	rw.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(rw).Encode(resp)
+}
+
+func orderHandler(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Type     string  `json:"type"`
+		Price    float64 `json:"price"`
+		Quantity float64 `json:"quantity"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	var ot exchange.OrderType
+	switch req.Type {
+	case "buy":
+		ot = exchange.Buy
+	case "sell":
+		ot = exchange.Sell
+	default:
+		http.Error(rw, "invalid type", http.StatusBadRequest)
+		return
+	}
+	trades, order := ob.PlaceOrder(exchange.Order{Type: ot, Price: req.Price, Quantity: req.Quantity})
+	rw.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(rw).Encode(struct {
+		Order  exchange.Order   `json:"order"`
+		Trades []exchange.Trade `json:"trades"`
+	}{Order: order, Trades: trades})
+}
+
+func bookHandler(rw http.ResponseWriter, r *http.Request) {
+	buys, sells := ob.Book()
+	rw.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(rw).Encode(struct {
+		Buys  []exchange.Order `json:"buys"`
+		Sells []exchange.Order `json:"sells"`
+	}{Buys: buys, Sells: sells})
+}
+
+func tradesHandler(rw http.ResponseWriter, r *http.Request) {
+	trades := ob.Trades()
+	rw.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(rw).Encode(trades)
 }
